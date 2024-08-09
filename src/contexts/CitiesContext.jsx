@@ -28,12 +28,9 @@ function reducer(state, action) {
         isLoading: false,
         cities: action.payload,
       };
+
     case "city/loaded":
-      return {
-        ...state,
-        isLoading: false,
-        currentCity: action.payload,
-      };
+      return { ...state, isLoading: false, currentCity: action.payload };
 
     case "city/created":
       return {
@@ -42,35 +39,37 @@ function reducer(state, action) {
         cities: [...state.cities, action.payload],
         currentCity: action.payload,
       };
+
     case "city/deleted":
       return {
         ...state,
-        isLoading: action.payload,
+        isLoading: false,
         cities: state.cities.filter((city) => city.id !== action.payload),
         currentCity: {},
       };
+
     case "rejected":
       return {
         ...state,
         isLoading: false,
         error: action.payload,
       };
+
     default:
-      throw new Error("unknown action type");
+      throw new Error("Unknown action type");
   }
 }
+
 function CitiesProvider({ children }) {
   const [{ cities, isLoading, currentCity, error }, dispatch] = useReducer(
     reducer,
     initialState
   );
-  // const [cities, setCities] = useState([]);
-  // const [isLoading, setIsLoading] = useState(false);
-  // const [currentCity, setCurrentCity] = useState({});
 
   useEffect(function () {
     async function fetchCities() {
       dispatch({ type: "loading" });
+
       try {
         const res = await fetch(`${BASE_URL}/cities`);
         const data = await res.json();
@@ -78,17 +77,19 @@ function CitiesProvider({ children }) {
       } catch {
         dispatch({
           type: "rejected",
-          payload: "There was an error Loading cities..",
+          payload: "There was an error loading cities...",
         });
       }
     }
     fetchCities();
   }, []);
-  let getCity = useCallback(
+
+  const getCity = useCallback(
     async function getCity(id) {
       if (Number(id) === currentCity.id) return;
 
       dispatch({ type: "loading" });
+
       try {
         const res = await fetch(`${BASE_URL}/cities/${id}`);
         const data = await res.json();
@@ -96,40 +97,48 @@ function CitiesProvider({ children }) {
       } catch {
         dispatch({
           type: "rejected",
-          payload: "There was an error Loading the city..",
+          payload: "There was an error loading the city...",
         });
       }
     },
     [currentCity.id]
   );
+
   async function createCity(newCity) {
     dispatch({ type: "loading" });
+
     try {
       const res = await fetch(`${BASE_URL}/cities`, {
         method: "POST",
         body: JSON.stringify(newCity),
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
       const data = await res.json();
+
       dispatch({ type: "city/created", payload: data });
     } catch {
       dispatch({
         type: "rejected",
-        payload: "There was an error creating the city..",
+        payload: "There was an error creating the city...",
       });
     }
   }
+
   async function deleteCity(id) {
     dispatch({ type: "loading" });
+
     try {
       await fetch(`${BASE_URL}/cities/${id}`, {
         method: "DELETE",
       });
+
       dispatch({ type: "city/deleted", payload: id });
     } catch {
       dispatch({
         type: "rejected",
-        payload: "There was an error deleting the city..",
+        payload: "There was an error deleting the city...",
       });
     }
   }
@@ -139,8 +148,8 @@ function CitiesProvider({ children }) {
       value={{
         cities,
         isLoading,
-        error,
         currentCity,
+        error,
         getCity,
         createCity,
         deleteCity,
@@ -152,10 +161,10 @@ function CitiesProvider({ children }) {
 }
 
 function useCities() {
-  const contexts = useContext(CitiesContext);
-  if (contexts === undefined)
-    throw new Error("cities context was used outside of citiesProvider");
-  return contexts;
+  const context = useContext(CitiesContext);
+  if (context === undefined)
+    throw new Error("CitiesContext was used outside the CitiesProvider");
+  return context;
 }
 
-export { useCities, CitiesProvider };
+export { CitiesProvider, useCities };
