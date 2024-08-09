@@ -9,5 +9,14 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // Redirect all 404s to index.html
+      var redirectTo = window.location.pathname;
+      var url = "index.html";
+      if (redirectTo !== "/") {
+        url += "?" + redirectTo;
+      }
+      window.location.href = url;
+    </script>
   </body>
 </html>
